@@ -17,7 +17,7 @@ import datetime, pytz, time
 import sys
 import requests
 
-VERSION = '1.2' # 2024.01.24
+VERSION = '1.3' # 2024.01.25
 CONFIG_VERSION = 2
 HOST = "https://api.suanleme.cn/api/v1"
 
@@ -26,12 +26,14 @@ def timeStamp_To_dateTime(timeStamp):return datetime.datetime.fromtimestamp(int(
 def isoDateTime_To_dateTime(iso_date_time):return datetime.datetime.strptime(iso_date_time, "%Y-%m-%dT%H:%M:%S.%f%z").strftime('%Y-%m-%d<br />%H:%M:%S')
 
 def saveConfig(config):
+    config['tasks_record'] = dict(sorted(config['tasks_record'].items(), reverse=True))
     with open("config.json", "w", encoding='utf8') as file:
         json.dump(config, file, ensure_ascii=False, indent = 4)
 
 def loadConfig():
     with open("config.json", "r+", encoding='utf8') as file:
         config = json.load(file)
+    config['tasks_record'] = {int(key):config['tasks_record'][key] for key in config['tasks_record']}
     return config
 
 def checkUpdate():
@@ -62,7 +64,7 @@ def sendMsg(config, msg):
     url = "http://www.pushplus.plus/send"
     data['token'] = config['pushplus_token']
     data['title'] = '算了么来新单啦！'
-    data['template'] = 'markdown'
+    data['template'] = 'html'
     data['topic'] = config['pushplus_topic'] # 群组编码，发送群组消息。
     data['content'] = msg
     response = requests.post(url,data=data)
@@ -138,6 +140,7 @@ def analyzing_tasks_info(tasks):
     for task in tasks['results']:
         taskData = {}
         taskData['id'] = task['id']
+        taskData['name'] = task['name']
         taskData['detail'] = task['desc']
         taskData['created_time'] = task['created_time']
         taskData['peer_income'] = task['peer_income']
@@ -146,16 +149,17 @@ def analyzing_tasks_info(tasks):
     return taskList
 
 def taskList_To_Msg(taskList):
-    msg = r'''<html><head><style>.table-container {overflow-x: auto;}table {width: 100%;min-width: 700px;border-collapse: collapse;}th, td {border: 1px solid black;padding: 8px;text-align: left;}.detail-time {width: 50px;word-wrap: break-word;}.other-column {width: 15px;word-wrap: break-word;}</style></head><body><div class="table-container"><table><tr><th class="other-column">任务ID</th><th class="detail-time">任务细节</th><th class="detail-time">创建时间</th><th class="other-column">单位收益</th><th class="other-column">总量</th></tr>'''
+    msg = r'''<div class="table-container"><table class="new-tasks"><tr><th class="other-column">任务ID</th><th class="detail-time">任务细节</th><th class="detail-time">创建时间</th><th class="other-column">单位收益</th><th class="other-column">总量</th></tr>'''
     for i in taskList:
         msg += f'''<tr><td class="other-column">{i['id']}</td><td class="detail-time">{i['detail']}</td><td class="detail-time">{isoDateTime_To_dateTime(i['created_time'])}</td><td class="other-column">{i['peer_income']}</td><td class="other-column">{i['points']}</td></tr>'''
-    msg += "</tr></table></div></body></html>"
+    msg += "</table></div>"
     return msg
 
 def updated_Tasks_To_Msg(tasksList,config):
-    msg = f'''|任务ID|任务点更新前|任务点更新后|\n|:----:|:----:|:----:|\n'''
+    msg = r'''<div class="table-container"><table class="new-points"><tr><th class="other-column">任务ID</th><th class="other-column">任务点更新前</th><th class="other-column">任务点更新后</th></tr>'''
     for task in tasksList:
-        msg += f'''|{task['id']}|{config.get('tasks_record').get(str(task['id']),{}).get('points',0)}|{task['points']}|\n'''
+        msg += f'''<tr><td class="other-column">{task['id']}</td><td class="other-column">{config.get('tasks_record').get(task['id'],{}).get('points',0)}</td><td class="other-column">{task['points']}</td></tr>'''
+    msg += "</table></div>"
     return msg
 
 def loop(config):
@@ -166,21 +170,21 @@ def loop(config):
             if tasksList:
                 i = [i['id'] for i in tasksList] # 列表，临时存储订单ID用于寻找最大的ID
                 latest_id = int(max(i))
-                msg = ''
+                msg = '<style>.table-container {overflow-x: auto;}table {width: 100%;border-collapse: collapse;}.new-tasks {min-width: 700px;}.new-points {min-width: 100px;}th, td {border: 1px solid black;padding: 8px;text-align: left;}.detail-time {width: 50px;word-wrap: break-word;}.other-column {width: 10px;word-wrap: break-word;}</style>'
                 if latest_id > config['latest_id']:
                     config['latest_id'] = latest_id
-                    msg += f"#### 有新订单。当前最新是 {latest_id}\n"
+                    msg += f"<h4>有新订单。当前最新是 {latest_id}</h4>"
                     msg += taskList_To_Msg(tasksList)
                     print(f"{taskList_To_Msg(tasksList)}")
                 updated_tasks = []
                 for task in tasksList:
-                    if task['points'] > config.get('tasks_record').get(str(task['id']),{}).get('points',0):updated_tasks.append(task)
+                    if task['points'] > config.get('tasks_record').get(task['id'],{}).get('points',0):updated_tasks.append(task)
                 if updated_tasks:
-                    msg += f"#### 有新任务点\n"
-                    msg += updated_Tasks_To_Msg(tasksList,config)
-                    print(f"{updated_Tasks_To_Msg(tasksList,config)}")
-                    for task in tasksList:config['tasks_record'][str(task['id'])] = task
-                sendMsg(config, msg)
+                    msg += f"<h4>有新任务点</h4>"
+                    msg += updated_Tasks_To_Msg(updated_tasks,config)
+                    print(f"{updated_Tasks_To_Msg(updated_tasks,config)}")
+                    for task in tasksList:config['tasks_record'][task['id']] = task
+                if latest_id > config['latest_id'] or updated_tasks:sendMsg(config, msg)
                 saveConfig(config)
                 print(f"{timeStamp_To_dateTime(time.time())}\t当前最新{latest_id}...\r",end='')
             else:
