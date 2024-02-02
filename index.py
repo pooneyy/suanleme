@@ -17,7 +17,7 @@ import datetime, pytz, time
 import sys
 import requests
 
-VERSION = '1.3' # 2024.01.25
+VERSION = '1.3.1' # 2024.02.02
 CONFIG_VERSION = 2
 HOST = "https://api.suanleme.cn/api/v1"
 
@@ -73,7 +73,7 @@ def sendMsg(config, msg):
 def login(config):
     url = f"{HOST}/user/token"
     payload={
-        'username': config['suanleme_username'],
+        'account': config['suanleme_username'],
         'password': config['suanleme_password'],
     }
     response = requests.post(url, data=payload)
