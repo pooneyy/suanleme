@@ -6,9 +6,9 @@
 
 现有一个已部署的demo，使用微信扫码，也可接收消息推送：
 
-<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=gQGp8DwAAAAAAAAAAS5odHRwOi8vd2VpeGluLnFxLmNvbS9xLzAyQ0dtTkVtMDVjWEQxTVQ1ajFCY2sAAgQ3eKtlAwQAjScA" alt="showqrcode"  />
+<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=gQFu8DwAAAAAAAAAAS5odHRwOi8vd2VpeGluLnFxLmNvbS9xLzAydHFmYUVIMDVjWEQxX25GUHhCY1UAAgTXXMxlAwQAjScA" alt="showqrcode"  />
 
-这个二维码**有效期至2024年2月20日**
+这个二维码**有效期至2024年3月14日**
 
 ### 使用说明
 
@@ -32,7 +32,10 @@ python index.py
 ### 更新日志
 
 ```
-1.3.1 (2024.02.02) 修复：修复了无法登录的问题
+1.4   (2024.02.14) 更新：优化登录方式，配置文件不再保存账号密码，提高安全性。
+                   配置文件版本更新，版本不一致将会重新创建配置文件，请提前备份。
+
+1.3.1 (2024.02.02) 修复：修复了无法登录的问题。
 
 1.3   (2024.01.25) 修复：
                    1、修复了表格显示错误；
