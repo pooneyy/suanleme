@@ -6,10 +6,9 @@
 
 现有一个已部署的demo，使用微信扫码，也可接收消息推送：
 
-<img src="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=gQFu8DwAAAAAAAAAAS5odHRwOi8vd2VpeGluLnFxLmNvbS9xLzAydHFmYUVIMDVjWEQxX25GUHhCY1UAAgTXXMxlAwQAjScA" alt="showqrcode"  />
+<img src="https://wmimg.com/i/556/2024/03/65ec54732b77d.png" alt="showqrcode"  />
 
-这个二维码**有效期至2024年3月14日**
-
+这个二维码**~~有效期至2024年3月14日~~**
 ### 使用说明
 
 ```bash
